@@ -9,48 +9,20 @@ from rest_framework import generics
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
+from accounts.cryptography import RSA
 
 from accounts.serializers import UserRegisterSerializer
 
-from .models import Users
-
+from .models import RSAKeys, Users
+from .extraModules import prepareKeys
 # Create your views here.
 
-# class LoginView(View):
-#     form_class = UserLoginForm
-
-#     def get(self, *args, **kwargs):
-#         return render(self.request , 'accounts/login.html', {'form': self.form_class})
-
-#     def post(self, *args, **kwargs):
-#         form = self.form_class(self.request.POST)
-#         if form.is_valid():
-#             contact_no = form.cleaned_data.get('contact_no')
-#             # citizenship_no = form.cleaned_data.get('citizenship_no')
-#             password = form.cleaned_data.get('password')
-#             user = Users.objects.filter(contact_no=contact_no).first()
-#             if user:
-#                 user_obj = authenticate(self.request, contact_no=contact_no, password=password )
-#                 print('hhhh1', user_obj)
-#                 if user_obj != None:
-#                     refresh = RefreshToken.for_user(user)
-#                     token = {
-#                         'access': str(refresh),
-#                         'refresh': str(refresh.access_token)
-#                     }
-
-#                     login(self.request,user_obj)
-#                     print(token)
-#                     return Response(token, status=status.HTTP_200_OK)
-#             else:
-#                 print('here 2')
-#                 return render(self.request , 'accounts/login.html', {'form': self.form_class})
-#         print('Nooo', form.errors)
-#         return render(self.request , 'accounts/login.html', {'form': self.form_class})
-
-
-
 class APILoginView(APIView):
+    """
+        API to login user
+        Inputs: contact_no, citizenship_no, password
+        API Endpoint: api/accounts/login/
+    """
     def dispatch(self, *args, **kwargs):
         self.payload = {
             'message':{}, 'details': {}
@@ -59,37 +31,53 @@ class APILoginView(APIView):
 
     def post(self, request, *args, **kwargs):
         data = request.data
+        rsa = RSA()
         contact_no = data.get('contact_no')
-        # citizenship_no = data.get('citizenship_no')
+        citizenship_no = data.get('citizenship_no')
         password = data.get('password')
-        user = Users.objects.filter(contact_no=contact_no).first()
+        first_name = data.get('first_name')
+        user = Users.objects.filter(contact_no=contact_no)
         if user:
-            user_obj = authenticate(self.request, contact_no=contact_no, password=password )
-            if user_obj != None:
-                refresh = RefreshToken.for_user(user)
-                token = {
-                    'access': str(refresh),
-                    'refresh': str(refresh.access_token)
-                }
+            rsa_object = RSAKeys.objects.filter(user=user.first())
+            if rsa_object:
+                public_key = rsa_object.first().public_key
+                private_key = rsa_object.first().private_key
+                prepared_public_key, prepared_private_key = prepareKeys(public_key, private_key)
+                citizenship_no_encrypted = rsa.encrypt(citizenship_no, prepared_public_key)
+                if user.first().citizenship_no == citizenship_no_encrypted:
+                    user_obj = authenticate(self.request, contact_no=contact_no, password=password )
+                    if user_obj != None:
+                        refresh = RefreshToken.for_user(user.first())
+                        token = {
+                            'access': str(refresh),
+                            'refresh': str(refresh.access_token)
+                        }
 
-                login(self.request,user_obj)
-                self.payload['message'] = 'User logged in successfully'
-                self.payload['details']['token'] = token
-                return Response(self.payload, status=status.HTTP_200_OK)
+                        login(self.request,user_obj)
+                        self.payload['message'] = 'User logged in successfully'
+                        self.payload['details']['token'] = token
+                        return Response(self.payload, status=status.HTTP_200_OK)
+                    else:
+                        self.payload['message'] = "Incorrect password"
+                else:
+                    self.payload['message'] = "Incorrect citizenship number"
         else:
-            self.payload['message'] = 'Invalid credentials'
-            return Response(self.payload, status=status.HTTP_403_FORBIDDEN)
-        return  Response(self.payload, status=status.HTTP_400_BAD_REQUEST)
+            self.payload['message'] = 'Incorrect contact number'
+        return Response(self.payload, status=status.HTTP_403_FORBIDDEN)
+        # return  Response(self.payload, status=status.HTTP_400_BAD_REQUEST)
 
 
 class APIRegisterView(APIView):
-
+    """
+        API to register user
+        Inputs: first_name, last_name, contact_no, citizenship_no, password, password2
+        API Endpoint: api/accounts/register/
+    """
     def dispatch(self, *args, **kwargs):
         self.payload = {
             'message':{}, 'details': {}
         }
         return super(self.__class__, self).dispatch(*args, **kwargs)
-
 
     def post(self,request,  *args, **kwargs):
         serializer = UserRegisterSerializer(data=request.data)

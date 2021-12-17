@@ -1,7 +1,12 @@
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 
-from .models import Users
+from accounts.cryptography import RSA
+
+from .models import RSAKeys, Users
+from .extraModules import prepareKeys
+
+rsa = RSA()
 
 class UserRegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, )
@@ -13,12 +18,13 @@ class UserRegisterSerializer(serializers.ModelSerializer):
     
     def validate(self, data):
         if data['password'] != data['password2']:
-            raise serializers.ValidationError({"password": "Passwords didn't matched"})
+            raise serializers.ValidationError({"password": "Passwords didn't match"})
         
         return data
     
     def create(self, validated_data):
-        user = Users.objects.create(
+        
+        user = Users(
             contact_no=validated_data['contact_no'],
             first_name=validated_data['first_name'],
             last_name=validated_data['last_name'],
@@ -26,4 +32,12 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         )
         user.set_password(validated_data['password'])
         user.save()
+        
+        public_key, private_key = rsa.computeNums()
+        rsa_obj = RSAKeys.objects.create(user=user, public_key=public_key, private_key=private_key)
+        prepared_public_key, prepared_private_key = prepareKeys(rsa_obj.public_key, rsa_obj.private_key)
+        user.citizenship_no = rsa.encrypt(validated_data['citizenship_no'], prepared_public_key)
+        user.save()
         return user
+
+
