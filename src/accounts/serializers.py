@@ -1,12 +1,12 @@
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
-
-from accounts.cryptography import RSA
+from accounts.cryptography import RSA, CryptoFernet
 
 from .models import RSAKeys, Users
-from .extraModules import prepareKeys
+from .extraModules import getSHA256Hash, prepareKeys
 
 rsa = RSA()
+
 
 class UserRegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, )
@@ -32,14 +32,15 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         )
         user.set_password(validated_data['password'])
         user.save()
-        
-        public_key, private_key = rsa.computeNums()
-        rsa_obj = RSAKeys.objects.create(user=user, public_key=public_key, private_key=private_key)
-        prepared_public_key, prepared_private_key = prepareKeys(rsa_obj.public_key, rsa_obj.private_key)
+        n_e_d = rsa.computeNums()
+        prepared_public_key, prepared_private_key = prepareKeys(n_e_d)
         user.citizenship_no = rsa.encrypt(validated_data['citizenship_no'], prepared_public_key)
-        # user.first_name = rsa.encrypt(validated_data['first_name'], prepared_public_key)
-        # user.last_name = rsa.encrypt(validated_data['last_name'], prepared_public_key)
+        user.first_name = rsa.encrypt(validated_data['first_name'], prepared_public_key)
+        user.last_name = rsa.encrypt(validated_data['last_name'], prepared_public_key)
         user.save()
+        sha256Hash = getSHA256Hash(validated_data['password'])
+        fernet = CryptoFernet(sha256Hash)
+        rsa_obj = RSAKeys.objects.create(user=user, num_exp_d=fernet.encrypt(n_e_d))
         return user
 
 
