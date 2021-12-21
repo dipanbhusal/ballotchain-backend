@@ -1,10 +1,16 @@
+import os
 from django.contrib.auth.base_user import BaseUserManager
-from django.db.models.deletion import CASCADE
 from django.utils import timezone
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 
 # Create your models here.
+
+
+def citizenship_image(self, filename):
+    extenstion = os.path.splitext(filename)[1].lower()
+    return f'CitizenshipImage/{self.symbol}{extenstion}'
+
 
 USER_TYPES = (
     ('voter', 'voter'),
@@ -100,3 +106,23 @@ class RSAKeys(models.Model):
     def save(self, *args, **kwargs):
         self.num_exp_d = self.num_exp_d.decode('utf-8')
         super(self.__class__, self).save(*args, **kwargs)
+
+
+class Profile(models.Model):
+    user = models.ForeignKey(Users, on_delete=models.CASCADE)
+    father_name = models.CharField(max_length=100)
+    permanent_address = models.OneToOneField('PermanentAddress' ,on_delete=models.CASCADE)
+    temporary_address = models.OneToOneField('TemporaryAddress', on_delete=models.CASCADE)
+    date_of_birth = models.DateField()
+    citizenship_image= models.ImageField(upload_to=citizenship_image)
+
+
+class TemporaryAddress(models.Model):
+    district = models.ForeignKey(Districts, on_delete=models.SET_NULL, null=True)
+    provience = models.ForeignKey(Province, on_delete=models.SET_NULL, null=True)
+    
+
+class PermanentAddress(models.Model):
+    district = models.ForeignKey(Districts, on_delete=models.SET_NULL, null=True)
+    provience = models.ForeignKey(Province, on_delete=models.SET_NULL, null=True)
+
