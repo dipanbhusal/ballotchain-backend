@@ -1,5 +1,5 @@
+from django.contrib.auth.hashers import make_password
 from django.shortcuts import redirect, render, HttpResponse
-from django.views import View
 from django.contrib.auth import authenticate, login
 
 from rest_framework.response import Response
@@ -9,12 +9,12 @@ from rest_framework import generics
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
-from accounts.cryptography import RSA
+from accounts.cryptography import RSA, CryptoFernet
 
 from accounts.serializers import UserRegisterSerializer
 
 from .models import RSAKeys, Users
-from .extraModules import prepareKeys
+from .extraModules import getSHA256Hash, prepareKeys
 # Create your views here.
 
 class APILoginView(APIView):
@@ -36,13 +36,15 @@ class APILoginView(APIView):
         citizenship_no = data.get('citizenship_no')
         password = data.get('password')
         first_name = data.get('first_name')
+        fernet_key = getSHA256Hash(password)
+        fernet = CryptoFernet(fernet_key)
         user = Users.objects.filter(contact_no=contact_no)
         if user:
-            rsa_object = RSAKeys.objects.filter(user=user.first())
+            rsa_object = RSAKeys.objects.filter(user=user.first()).first()
             if rsa_object:
-                public_key = rsa_object.first().public_key
-                private_key = rsa_object.first().private_key
-                prepared_public_key, prepared_private_key = prepareKeys(public_key, private_key)
+                n_e_d = fernet.decrypt(rsa_object.num_exp_d) # returns 'n-e-d' 
+
+                prepared_public_key, prepared_private_key = prepareKeys(n_e_d)
                 citizenship_no_encrypted = rsa.encrypt(citizenship_no, prepared_public_key)
                 if user.first().citizenship_no == citizenship_no_encrypted:
                     user_obj = authenticate(self.request, contact_no=contact_no, password=password )
