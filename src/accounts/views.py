@@ -1,4 +1,4 @@
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect, render, HttpResponse
 from django.views import View
 from django.contrib.auth import authenticate, login
 
@@ -90,3 +90,8 @@ class APIRegisterView(APIView):
         self.payload['message'] = serializer.errors
         return Response(self.payload, status=status.HTTP_400_BAD_REQUEST)
 
+
+
+def test(request):
+    
+    return HttpResponse("test")

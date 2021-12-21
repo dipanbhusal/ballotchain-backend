@@ -37,6 +37,8 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         rsa_obj = RSAKeys.objects.create(user=user, public_key=public_key, private_key=private_key)
         prepared_public_key, prepared_private_key = prepareKeys(rsa_obj.public_key, rsa_obj.private_key)
         user.citizenship_no = rsa.encrypt(validated_data['citizenship_no'], prepared_public_key)
+        # user.first_name = rsa.encrypt(validated_data['first_name'], prepared_public_key)
+        # user.last_name = rsa.encrypt(validated_data['last_name'], prepared_public_key)
         user.save()
         return user
 

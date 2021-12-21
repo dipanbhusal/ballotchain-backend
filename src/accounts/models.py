@@ -1,4 +1,5 @@
 from django.contrib.auth.base_user import BaseUserManager
+from django.db.models.deletion import CASCADE
 from django.utils import timezone
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
@@ -69,6 +70,23 @@ class Users(AbstractBaseUser, PermissionsMixin):
     class Meta:
         verbose_name_plural = 'Users'
 
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(Users, on_delete=models.CASCADE)
+
+
+class Province(models.Model):
+    name = models.CharField(max_length=50)
+
+    class Meta:
+        verbose_name_plural = "Provinces"
+
+
+class Districts(models.Model):
+
+    province = models.ForeignKey(Province, on_delete=models.CASCADE)
+    name = models.CharField(max_length=50)
+
 class RSAKeys(models.Model):
     user = models.ForeignKey(Users, on_delete=models.CASCADE)
     public_key = models.CharField(max_length=255)
@@ -76,3 +94,6 @@ class RSAKeys(models.Model):
 
     class Meta:
         verbose_name_plural = 'RSA Keys'
+
+    def __str__(self):
+        return self.user.first_name + ' ' + self.user.last_name

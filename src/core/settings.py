@@ -11,8 +11,12 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
 import os
+import yaml
 from datetime import timedelta
 from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+credentials = yaml.safe_load(open(os.path.join(os.path.dirname(BASE_DIR), 'credentials.yaml')))
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -24,9 +28,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-$9*upcuzvc^$v@1u*4*qoq6s!ftw@7m-n)1i!*21$^s3zq310j'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = credentials['DEBUG']
 
-ALLOWED_HOSTS = ['*',]
+ALLOWED_HOSTS = credentials['ALLOWED_HOSTS']
 
 
 # Application definition
@@ -89,8 +93,12 @@ WSGI_APPLICATION = 'core.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': credentials['db_engine'],
+        'NAME': credentials['db_name'],
+        'USER': credentials['db_username'],
+        'PASSWORD': credentials['db_password'],
+        'PORT': credentials['db_port'],
+        'HOST': credentials['db_host'],
     }
 }
 
