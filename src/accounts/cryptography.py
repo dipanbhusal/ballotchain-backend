@@ -1,4 +1,5 @@
 import random
+from cryptography.fernet import Fernet
 
 PRIME_NUMBERS = [
 #     1009,
@@ -113,9 +114,8 @@ class RSA:
         else:
             d = a
         
-        public_keys = str(n*5)+'-'+str(exp*5)
-        private_keys = str(n*5)+'-'+str(d*5)
-        return public_keys, private_keys
+        num_e_d = str(n) + '-' + str(exp) + '-' + str(d)
+        return num_e_d
     
 
     def encrypt(self, message, public_key, block_size=2):
@@ -135,8 +135,8 @@ class RSA:
         encrypted_blocks.append(ciphertext)
 
         #encrypt all numbers by taking to power of e and modding by n
-        n = int(public_key[0])
-        e = int(public_key[1])
+        n = public_key[0]
+        e = public_key[1]
         for i in range(len(encrypted_blocks)):
             encrypted_blocks[i] = str((encrypted_blocks[i]**e) % n)
         
@@ -144,8 +144,8 @@ class RSA:
         return encrypted_message
 
     def decrypt(self, cipher, private_key, blocks_size=2):
-        n = int(private_key[0])
-        d = int(private_key[1])
+        n = private_key[0]
+        d = private_key[1]
         list_of_ciphers = cipher.split(' ')
         int_cipher = []
         for i in list_of_ciphers:
@@ -164,6 +164,25 @@ class RSA:
             message += temp
         return message
 
-# print(RSA().computeNums())
-# print(RSA().encrypt("dipan"))
-# print(RSA().decrypt("2487154 5460368 4152627"))
+
+class CryptoFernet:
+    def __init__(self, key):
+        self.key = key
+        self.fernet=Fernet(self.key)
+    
+    def encrypt(self, text):
+        bytes_text = bytes(text, 'utf-8')
+        try:
+            return self.fernet.encrypt(bytes_text)
+        except:
+            return None
+    
+    def decrypt(self, cipher):
+        print('cipher::', cipher)
+        bytes_text = bytes(cipher, 'utf-8') 
+        print('bytes_text::', cipher)
+        print(self.key)
+        try:
+            return self.fernet.decrypt(bytes_text)
+        except :
+            return None
