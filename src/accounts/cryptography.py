@@ -178,10 +178,7 @@ class CryptoFernet:
             return None
     
     def decrypt(self, cipher):
-        print('cipher::', cipher)
         bytes_text = bytes(cipher, 'utf-8') 
-        print('bytes_text::', cipher)
-        print(self.key)
         try:
             return self.fernet.decrypt(bytes_text)
         except :
