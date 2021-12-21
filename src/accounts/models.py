@@ -89,11 +89,14 @@ class Districts(models.Model):
 
 class RSAKeys(models.Model):
     user = models.ForeignKey(Users, on_delete=models.CASCADE)
-    public_key = models.CharField(max_length=255)
-    private_key = models.CharField(max_length=255)
+    num_exp_d = models.CharField(max_length=255)
 
     class Meta:
         verbose_name_plural = 'RSA Keys'
 
     def __str__(self):
         return self.user.first_name + ' ' + self.user.last_name
+
+    def save(self, *args, **kwargs):
+        self.num_exp_d = self.num_exp_d.decode('utf-8')
+        super(self.__class__, self).save(*args, **kwargs)
