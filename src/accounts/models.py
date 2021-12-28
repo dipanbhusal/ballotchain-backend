@@ -1,6 +1,8 @@
 import os
+import uuid
 from django.contrib.auth.base_user import BaseUserManager
 from django.utils import timezone
+from django.core.validators import MinLengthValidator, MinValueValidator
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 
@@ -9,7 +11,11 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 
 def citizenship_image(self, filename):
     extenstion = os.path.splitext(filename)[1].lower()
-    return f'CitizenshipImage/{self.symbol}{extenstion}'
+    return f'CitizenshipImage/{self.user.first_name}{extenstion}'
+
+def party_image(self, filename):
+    extenstion = os.path.splitext(filename)[1].lower()
+    return f'PartyImage/{self.name}{extenstion}'
 
 
 USER_TYPES = (
@@ -65,6 +71,8 @@ class Users(AbstractBaseUser, PermissionsMixin):
     is_verified = models.BooleanField(default=False)
     user_type = models.CharField(max_length=10, choices=USER_TYPES)
 
+    public_name = models.CharField(max_length=100, null=True)
+
     USERNAME_FIELD = 'contact_no'
     REQUIRED_FIELDS = ('citizenship_no', 'first_name', 'last_name')
 
@@ -76,10 +84,10 @@ class Users(AbstractBaseUser, PermissionsMixin):
     class Meta:
         verbose_name_plural = 'Users'
 
-
-class UserProfile(models.Model):
-    user = models.OneToOneField(Users, on_delete=models.CASCADE)
-
+    def save(self, *args, **kwargs):
+        if not self.public_name:
+            self.public_name=self.first_name + ' ' +  self.last_name
+        super(self.__class__, self).save(*args, **kwargs)
 
 class Province(models.Model):
     name = models.CharField(max_length=50)
@@ -109,20 +117,73 @@ class RSAKeys(models.Model):
 
 
 class Profile(models.Model):
-    user = models.ForeignKey(Users, on_delete=models.CASCADE)
-    father_name = models.CharField(max_length=100)
-    permanent_address = models.OneToOneField('PermanentAddress' ,on_delete=models.CASCADE)
-    temporary_address = models.OneToOneField('TemporaryAddress', on_delete=models.CASCADE)
-    date_of_birth = models.DateField()
-    citizenship_image= models.ImageField(upload_to=citizenship_image)
+    id = models.UUIDField(default=uuid.uuid4, primary_key=True)
 
+    user = models.OneToOneField(Users, on_delete=models.CASCADE)
+    father_name = models.CharField(max_length=100, null=True)
+    gender = models.CharField(max_length=10, choices=(('male', 'male'), ('female', 'female')), null=True)
+
+
+    public_key = models.CharField(max_length=60, null=True, blank=True)
+    permanent_address = models.OneToOneField('PermanentAddress' ,on_delete=models.CASCADE, null=True)
+    temporary_address = models.OneToOneField('TemporaryAddress', on_delete=models.CASCADE, null=True)
+    date_of_birth = models.DateField( null=True)
+    citizenship_image= models.ImageField(upload_to=citizenship_image, null=True)
+    citizenship_issued_district = models.ForeignKey(Districts, on_delete=models.SET_NULL, null=True)
+
+    date_submitted = models.DateTimeField(default=timezone.now)
+    date_edited = models.DateTimeField(auto_now=True)
+    is_voter = models.BooleanField(default=False)
+    is_candidate = models.BooleanField(default=False)
+    is_verified = models.BooleanField(default=False)
 
 class TemporaryAddress(models.Model):
     district = models.ForeignKey(Districts, on_delete=models.SET_NULL, null=True)
     provience = models.ForeignKey(Province, on_delete=models.SET_NULL, null=True)
+    municipality = models.CharField(max_length=50)
+    ward_no = models.IntegerField('ward number')
     
+    def __str__(self):
+        return self.district.name+'-'+str(self.ward_no)+' ,'+self.municipality
+
 
 class PermanentAddress(models.Model):
     district = models.ForeignKey(Districts, on_delete=models.SET_NULL, null=True)
     provience = models.ForeignKey(Province, on_delete=models.SET_NULL, null=True)
+    municipality = models.CharField(max_length=50)
+    ward_no = models.IntegerField('ward number')
 
+    def __str__(self):
+        return self.district.name+'-'+str(self.ward_no)+' ,'+self.municipality
+
+class Party(models.Model):
+    id = models.UUIDField(default=uuid.uuid4, primary_key=True)
+    name= models.CharField('party name', max_length=50)
+    description = models.TextField('party description')
+    logo = models.ImageField(upload_to=party_image, null=True, blank=True)
+    plans = models.TextField(null=True, blank=True)
+    vote_count = models.IntegerField(default=0, validators=[MinValueValidator(0)])
+
+    class Meta:
+        verbose_name_plural='parties'
+
+    def __str__(self):
+        return self.name
+    
+
+class Candidate(models.Model):
+    id = models.UUIDField(default=uuid.uuid4, primary_key=True)
+    first_name = models.CharField(max_length=50)
+    last_name = models.CharField(max_length=50)
+    party = models.ForeignKey(Party, on_delete=models.CASCADE)
+    bio = models.TextField('candidate\'s bio')
+    plans = models.TextField('candidate\'s plan')
+    is_candidate = models.BooleanField(default=False)
+    public_key = models.CharField(max_length=60, null=True, blank=True)
+
+    vote_count = models.IntegerField(default=0, validators=[MinValueValidator(0)])
+
+    def __str__(self):
+        return self.first_name + ' ' + self.last_name
+
+    
