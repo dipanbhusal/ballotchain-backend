@@ -30,8 +30,8 @@ class AuditFields(models.Model):
 
 
 class UserManager(BaseUserManager):
-    def create_user(self, contact_no, citizenship_no,  first_name, last_name, is_active=True, password=None):
-        if not contact_no:
+    def create_user(self, email, citizenship_no,  first_name, last_name, is_active=True, password=None):
+        if not email:
             raise ValueError('Contact Number is required')
         if not citizenship_no:
             raise ValueError('Citizenship number is requried')
@@ -41,7 +41,7 @@ class UserManager(BaseUserManager):
             raise ValueError('Last Name is required')
         
         user_obj = self.model(
-            contact_no=contact_no, citizenship_no=citizenship_no, first_name=first_name, last_name=last_name, is_active=is_active
+            email=email, citizenship_no=citizenship_no, first_name=first_name, last_name=last_name, is_active=is_active
         )
 
         user_obj.set_password(password)    
@@ -49,8 +49,8 @@ class UserManager(BaseUserManager):
         return user_obj
 
     
-    def create_superuser(self, contact_no, citizenship_no, first_name, last_name, password):
-        user_obj = self.create_user(contact_no=contact_no, citizenship_no=citizenship_no, first_name=first_name, last_name=last_name, password=password, is_active=True)
+    def create_superuser(self, email, citizenship_no, first_name, last_name, password):
+        user_obj = self.create_user(email=email, citizenship_no=citizenship_no, first_name=first_name, last_name=last_name, password=password, is_active=True)
         user_obj.is_superuser = True
         user_obj.is_staff = True
         user_obj.user_type = 'admin'
@@ -59,12 +59,12 @@ class UserManager(BaseUserManager):
 
 
 class Users(AbstractBaseUser, PermissionsMixin):
-    contact_no = models.CharField(max_length=10, unique=True)
+    email = models.EmailField(max_length=256, unique=True)
     citizenship_no = models.TextField()
     first_name = models.TextField()
     last_name = models.TextField()
 
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
 
@@ -72,8 +72,9 @@ class Users(AbstractBaseUser, PermissionsMixin):
     user_type = models.CharField(max_length=10, choices=USER_TYPES)
 
     public_name = models.CharField(max_length=100, null=True)
+    citizenship_hash = models.CharField(max_length=255, null=True)
 
-    USERNAME_FIELD = 'contact_no'
+    USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ('citizenship_no', 'first_name', 'last_name')
 
     objects = UserManager()
@@ -119,14 +120,15 @@ class RSAKeys(models.Model):
 class Profile(models.Model):
     id = models.UUIDField(default=uuid.uuid4, primary_key=True)
 
-    user = models.OneToOneField(Users, on_delete=models.CASCADE)
+    user = models.OneToOneField(Users, on_delete=models.CASCADE, related_name='profile')
     father_name = models.CharField(max_length=100, null=True)
     gender = models.CharField(max_length=10, choices=(('male', 'male'), ('female', 'female')), null=True)
 
 
     public_key = models.CharField(max_length=60, null=True, blank=True)
-    permanent_address = models.OneToOneField('PermanentAddress' ,on_delete=models.CASCADE, null=True)
-    temporary_address = models.OneToOneField('TemporaryAddress', on_delete=models.CASCADE, null=True)
+    private_key = models.CharField(max_length=255, null=True, blank=True)
+    permanent_address = models.ForeignKey('PermanentAddress' ,on_delete=models.CASCADE, null=True)
+    temporary_address = models.ForeignKey('TemporaryAddress', on_delete=models.CASCADE, null=True)
     date_of_birth = models.DateField( null=True)
     citizenship_image= models.ImageField(upload_to=citizenship_image, null=True)
     citizenship_issued_district = models.ForeignKey(Districts, on_delete=models.SET_NULL, null=True)
@@ -136,6 +138,7 @@ class Profile(models.Model):
     is_voter = models.BooleanField(default=False)
     is_candidate = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
+    has_voted = models.BooleanField(default=False)
 
 class TemporaryAddress(models.Model):
     district = models.ForeignKey(Districts, on_delete=models.SET_NULL, null=True)
@@ -186,4 +189,20 @@ class Candidate(models.Model):
     def __str__(self):
         return self.first_name + ' ' + self.last_name
 
-    
+
+class ElectionState(models.Model):
+    start_time = models.DateTimeField(auto_now_add=True)
+    end_time = models.DateTimeField(null=True)
+    state = models.CharField(max_length=25)
+
+    def __str__(self):
+        return self.state
+
+
+class ElectionResult(models.Model):
+    voter = models.ForeignKey(Profile, on_delete=models.CASCADE)
+    candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE)
+    voting_time = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.voter.public_key} to {self.candidate.public_key}"

@@ -1,8 +1,9 @@
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
+from accounts.accountOperations import _createUser
 from accounts.cryptography import RSA, CryptoFernet
 
-from .models import RSAKeys, Users
+from .models import Candidate, Districts, Profile, Province, RSAKeys, Users
 from .extraModules import getSHA256Hash, prepareKeys
 
 rsa = RSA()
@@ -11,10 +12,11 @@ rsa = RSA()
 class UserRegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, )
     password2 = serializers.CharField(write_only=True, required=True)
-
+    # user_type = serializers.CharField(write_only=True, required=True)
+    
     class Meta:
         model = Users
-        fields = ('first_name', 'last_name', 'contact_no', 'citizenship_no', 'password', 'password2')
+        fields = ('first_name', 'last_name', 'email', 'citizenship_no', 'password', 'password2')
     
     def validate(self, data):
         if data['password'] != data['password2']:
@@ -24,23 +26,44 @@ class UserRegisterSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         
-        user = Users(
-            contact_no=validated_data['contact_no'],
-            first_name=validated_data['first_name'],
-            last_name=validated_data['last_name'],
-            citizenship_no=validated_data['citizenship_no']
-        )
-        user.set_password(validated_data['password'])
-        user.save()
-        n_e_d = rsa.computeNums()
-        prepared_public_key, prepared_private_key = prepareKeys(n_e_d)
-        user.citizenship_no = rsa.encrypt(validated_data['citizenship_no'], prepared_public_key)
-        user.first_name = rsa.encrypt(validated_data['first_name'], prepared_public_key)
-        user.last_name = rsa.encrypt(validated_data['last_name'], prepared_public_key)
-        user.save()
-        sha256Hash = getSHA256Hash(validated_data['password'])
-        fernet = CryptoFernet(sha256Hash)
-        rsa_obj = RSAKeys.objects.create(user=user, num_exp_d=fernet.encrypt(n_e_d))
-        return user
+        data = _createUser(validated_data)
+        if data['status'] == 200:
+            # sha256Hash = getSHA256Hash(validated_data['password'])
+            # fernet = CryptoFernet(sha256Hash)
+            # rsa_obj = RSAKeys.objects.create(user=data['user'], num_exp_d=fernet.encrypt(data['n_e_d']))
+            return data['user']
+        else:
+            data = {
+                "message": {
+                    "citizenship_no": [
+                        "User with given citizenship already exists."
+                    ]
+                },
+                "details": {}
+            }
+            raise serializers.ValidationError(data)
 
 
+class CandidateCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = ('')
+
+class DistrictSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Districts
+        fields = ('name',)
+
+
+class ProvinceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Province
+        fields = ('name',)
+
+
+class ProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = '__all__'
+    
+    def to_representation(self, instance):
+        return super().to_representation(instance)

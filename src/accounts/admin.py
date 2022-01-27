@@ -2,6 +2,8 @@ from django.contrib import admin
 from django.contrib import admin, messages
 from django.http import HttpResponseRedirect
 from django.utils.safestring import mark_safe
+from django.core.cache import cache
+from accounts.cryptography import CryptoFernet
 from blockchain.authenticate import create_account
 from blockchain.electionAdmin import ElectionAdmin
 from . import models 
@@ -13,22 +15,24 @@ class ProfileAdmin(admin.ModelAdmin):
     radio_fields = {'gender': admin.HORIZONTAL}
     change_form_template = "admin/accounts/profile/change_form.html"
 
-
     def first_name(self, obj):
-        return obj.user.first_name
+        return obj.user.first_name[:10]
 
     def last_name(self, obj):
-        return obj.user.last_name
-
+        return obj.user.last_name[:10]
 
     def response_change(self, request, obj):
         if "generate-id" in request.POST:
             if obj.public_key:
-                messages.error('request', f"Public key for current user already exists.")
+                messages.error(request, f"Public key for current user already exists.")
                 return HttpResponseRedirect('.')
             try:
                 account = create_account()
                 obj.public_key = account.address
+                key = cache.get(f"{obj.user.id}_user")
+                fernet = CryptoFernet(key)
+                cipher_private_key = fernet.encrypt(account.privateKey.hex())
+                obj.private_key =  cipher_private_key
                 obj.save()
                 self.message_user(request, f"Public key for {obj.user.first_name} is {account.address}")
 
@@ -48,10 +52,16 @@ class ProfileAdmin(admin.ModelAdmin):
                         Find more in <a href={url}>{url}</a>'
                     )
                 )
-                print(url)
                 obj.is_voter = True
                 obj.save()
                 return HttpResponseRedirect('.')
+            else:
+                self.message_user(
+                    request, mark_safe(
+                        f'Cannot add voter to blockchain eth-net.\
+                        Find more in <a href={url}>{url}</a>'
+                    )
+                )
             
         return super().response_change(request, obj)
     

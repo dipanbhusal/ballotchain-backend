@@ -9,47 +9,47 @@ PRIME_NUMBERS = [
 # 1031,
 # 1033,
 # 1039,
-# 1049,
-# 1051,
-# 1061,
-# 1063,
-# 1069,
-# 1087,
-# 1091,
-# 1093,
-# 1097,
-# 1103,
-# 1109,
-# 1117,
-# 1123,
-# 1129,
-# 1151,
-# 1153,
-# 1163,
-# 1171,
-# 1181,
-# 1187,
-# 1193,
-101,
-103,
-107,
-109,
-113,
-127,
-131,
-137,
-139,
-149,
-151,
-157,
-163,
-167,
-173,
-179,
-181,
-191,
-193,
-197
+1049,
+1051,
+1061,
+1063,
+1069,
+1087,
+1091,
+1093,
+1097,
+1103,
+1109,
+1117,
+1123,
+1129,
+1151,
+1153,
+1163,
+1171,
+1181,
+1187,
+1193,
+# 101,
+# 103,
+# 107,
+# 109,
+# 113,
+# 127,
+# 131,
+# 137,
+# 139,
+# 149,
+# 151,
+# 157,
+# 163,
+# 167,
+# 173,
+# 179,
+# 181,
+# 191,
+# 193,
+# 197
 ]
 
 class RSA:
@@ -165,6 +165,13 @@ class RSA:
         return message
 
 
+# Private:  [33389, 7771]
+# Public:  [33389, 24019]
+# 2131313123 ::: 19472 25752 25752 25752 6998
+
+# print(RSA().encrypt( "dipan", [33389, 24019]))
+# print(RSA().decrypt( "26269 30876 32175", [33389, 7771]))
+
 class CryptoFernet:
     def __init__(self, key):
         self.key = key
@@ -173,13 +180,15 @@ class CryptoFernet:
     def encrypt(self, text):
         bytes_text = bytes(text, 'utf-8')
         try:
-            return self.fernet.encrypt(bytes_text)
+            cipher= self.fernet.encrypt(bytes_text)
+            return cipher.decode('utf-8')
         except:
             return None
     
     def decrypt(self, cipher):
         bytes_text = bytes(cipher, 'utf-8') 
         try:
-            return self.fernet.decrypt(bytes_text)
+            plain = self.fernet.decrypt(bytes_text).decode('utf-8')
+            return plain
         except :
             return None
