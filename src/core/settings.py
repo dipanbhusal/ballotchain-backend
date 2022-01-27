@@ -15,11 +15,10 @@ import yaml
 from datetime import timedelta
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-credentials = yaml.safe_load(open(os.path.join(os.path.dirname(BASE_DIR), 'credentials.yaml')))
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+credentials = yaml.safe_load(open(os.path.join(os.path.dirname(BASE_DIR), 'credential.yaml')))
+
 
 
 # Quick-start development settings - unsuitable for production
@@ -42,14 +41,18 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    # 'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
 
     'accounts',
+    'blockchain',
+    'election',
 
-    'rest_framework',
-    'rest_framework_simplejwt',
 ]
 
 MIDDLEWARE = [
+    'accounts.middleware.RequestMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -61,11 +64,14 @@ MIDDLEWARE = [
 
 
 REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': (
+        # 'rest_framework.permissions.IsAuthenticated',
+    ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
-
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    )
-}
+        # 'rest_framework_simplejwt.authentication.JWTAuthentication',
+        # 'rest_framework.authentication.SessionAuthentication',
+    ),
+    }
 
 
 ROOT_URLCONF = 'core.urls'
@@ -173,3 +179,31 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_LIFETIME': timedelta(minutes=5),
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
+
+
+
+CACHE_TIMEOUT = 864000 # 86400 FOR 1 DAY OF CACHES STORED TIMEOUT
+CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': 'redis://127.0.0.1:6379',
+
+            'TIMEOUT': CACHE_TIMEOUT 
+        }
+    }
+
+
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/'
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+
+
+EMAIL_USE_TLS = True
+# EMAIL_HOST = credentials.get('EMAIL_HOST')
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# EMAIL_PORT = credentials.get('EMAIL_PORT')
+# EMAIL_HOST_USER = credentials.get('EMAIL_HOST_USER')
+# EMAIL_HOST_PASSWORD = credentials.get('EMAIL_HOST_PASSWORD')
