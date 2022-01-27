@@ -126,6 +126,35 @@
         {
             "inputs": [
                 {
+                    "internalType": "uint256",
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "name": "candidatesArray",
+            "outputs": [
+                {
+                    "internalType": "address",
+                    "name": "candidateAddress",
+                    "type": "address"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "totalVotes",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "bool",
+                    "name": "isCandidate",
+                    "type": "bool"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
                     "internalType": "address",
                     "name": "_candidateAddress",
                     "type": "address"
@@ -157,6 +186,38 @@
                     "internalType": "address",
                     "name": "",
                     "type": "address"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [],
+            "name": "electionResult",
+            "outputs": [
+                {
+                    "components": [
+                        {
+                            "components": [
+                                {
+                                    "internalType": "address",
+                                    "name": "voterAddress",
+                                    "type": "address"
+                                },
+                                {
+                                    "internalType": "address",
+                                    "name": "candidateAddress",
+                                    "type": "address"
+                                }
+                            ],
+                            "internalType": "struct BallotChain.VotingData",
+                            "name": "data",
+                            "type": "tuple"
+                        }
+                    ],
+                    "internalType": "struct BallotChain.Result[]",
+                    "name": "",
+                    "type": "tuple[]"
                 }
             ],
             "stateMutability": "view",
@@ -249,6 +310,35 @@
                 }
             ],
             "name": "voters",
+            "outputs": [
+                {
+                    "internalType": "address",
+                    "name": "voterAddress",
+                    "type": "address"
+                },
+                {
+                    "internalType": "bool",
+                    "name": "hasVoted",
+                    "type": "bool"
+                },
+                {
+                    "internalType": "bool",
+                    "name": "isVoter",
+                    "type": "bool"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "name": "votersArray",
             "outputs": [
                 {
                     "internalType": "address",
