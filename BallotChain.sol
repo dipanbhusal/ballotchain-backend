@@ -27,13 +27,26 @@ contract BallotChain{
         uint256 totalVotes;
         bool isCandidate;
     }
+
+    struct VotingData{
+        address voterAddress;
+        address candidateAddress;
+    }
+    
+    struct Result{
+    VotingData data;
+    }
+    
     enum ElectionState { Started, Voting, Ended } 
     ElectionState public electionState;
 
 
     mapping(address=>Voter) public voters; //Creates key-value pairs
     mapping(address=>Candidate) public candidates;
-
+    Voter[] public votersArray;
+    Candidate[] public candidatesArray;
+    Result[] electionResultArray;
+    
     
     //Modifiers
     modifier adminOnly(){
@@ -47,7 +60,7 @@ contract BallotChain{
     }
 
     modifier notVoted(){
-        require(voters[msg.sender].hasVoted == false, "Current user can cast vote.");
+        require(voters[msg.sender].hasVoted == false, "Current user has already voted.");
         _;
     }
 
@@ -55,6 +68,7 @@ contract BallotChain{
         require(voters[msg.sender].isVoter, "User is not voter");
         _;
     }
+
 
     event voterAdded(address _voter);
     event candidateAdded(address _candidate);
@@ -71,6 +85,7 @@ contract BallotChain{
         });
         totalVoters++;
         emit voterAdded(_voterAddress);
+        votersArray.push(voters[_voterAddress]);
         return voters[_voterAddress].voterAddress;
     }
 
@@ -92,6 +107,7 @@ contract BallotChain{
         });
         totalCandidates++;
         emit candidateAdded(candidates[_candidateAddress].candidateAddress);
+        candidatesArray.push(candidates[_candidateAddress]);
         return candidates[_candidateAddress].candidateAddress;
     }
 
@@ -105,12 +121,20 @@ contract BallotChain{
         voters[msg.sender].hasVoted = true;
         candidates[_candidateAddress].totalVotes++;
         countVoteCasted++;
+        
+        Result memory res = Result(VotingData(msg.sender, _candidateAddress));
+        electionResultArray.push(res);
+
     }
 
     function endElection() public inState(ElectionState.Voting) adminOnly returns(uint256){
-        electionState = ElectionState.Ended;
+        electionState = ElectionState.Started;
         emit electionEnded();
         return countVoteCasted;
     }
 
+    function electionResult() external view inState(ElectionState.Voting) returns(Result[] memory){
+        
+        return electionResultArray;
+    } 
 }
