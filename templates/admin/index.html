@@ -1,0 +1,10 @@
+{% extends 'admin/index.html' %}
+{% load admin_control %}
+
+{% block content %}
+<h1>BallotChain Admin Panel</h1>
+{% admin_control %}
+<br>
+<br>
+{{ block.super }}
+{% endblock %}

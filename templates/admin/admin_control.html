@@ -1,0 +1,12 @@
+<div>
+    {% if message|length != 0 %}
+    {{ message }}
+    {% endif %}
+    <p>Admin address: {{ admin }}</p>
+    <p>Election State: {{ state }}</p>
+    <form method="POST">
+        {% csrf_token %}
+        <input type="submit" style="background-color: greenyellow;" value="Start Election" name="start-election" />
+        <input type="submit" style="background-color: red;" value="End Election" name="end-election" />
+    </form>
+</div>
