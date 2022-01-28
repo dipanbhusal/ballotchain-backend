@@ -1,0 +1,10 @@
+{% extends 'admin/change_form.html' %}
+
+{% block submit_buttons_bottom %}
+    <div class="submit-row">
+        <input type="submit" value="Generate ID" name="generate-id">
+        <input type="submit" value="Add to BlockChain" name="add-to-chain">
+    </div>
+    {{ block.super }}
+
+{% endblock %}
