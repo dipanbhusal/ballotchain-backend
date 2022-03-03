@@ -10,7 +10,8 @@ urlpatterns = [
 
     path('cast-vote/', views.CastVoteView.as_view() ),
 
-    path('election-result/', views.ElectionResultView.as_view())
+    path('election-result/', views.ElectionResultView.as_view()),
+    path('election-list/', views.ElectionList.as_view())
 
 
 ]

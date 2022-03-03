@@ -22,6 +22,7 @@ def _createUser(validated_data):
                 citizenship_hash=getSHA256Hash(validated_data['citizenship_no'])
             )
         user.set_password(validated_data['password'])
+        user.is_active = True
         user.save()
         key = getSHA256Hash(validated_data['password'])
         fernet = CryptoFernet(key)
@@ -31,7 +32,7 @@ def _createUser(validated_data):
         user.save()
         Profile.objects.create(user=user, is_voter=True)
         first_name=validated_data['first_name']
-        send_verification(user.id,first_name, domain='127.0.0.1:8000')
+        # send_verification(user.id,first_name, domain='127.0.0.1:8000')
         cache.set(f"{user.id}_user", key)
         data = {
             'message': 'Successfully created user',

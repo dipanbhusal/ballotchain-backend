@@ -2,7 +2,7 @@ from django.contrib.auth.hashers import make_password
 from django.shortcuts import redirect, render, HttpResponse
 from django.contrib.auth import authenticate, login
 from django.core.cache import cache
-
+from django.contrib.auth import get_user_model
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import mixins, viewsets
@@ -12,11 +12,12 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
-from accounts.cryptography import RSA, CryptoFernet
+from accounts.cryptography import CryptoFernet
+from accounts.middleware import get_user
 
-from accounts.serializers import ProfileSerializer, UserRegisterSerializer
+from accounts.serializers import ProfileAllSerializer, ProfileSerializer, UserRegisterSerializer
 
-from .models import RSAKeys, Users
+from .models import Profile, Users
 from .extraModules import crypOperation, getSHA256Hash, prepareKeys
 # Create your views here.
 
@@ -41,15 +42,9 @@ class APILoginView(APIView):
         user = Users.objects.filter(email=email).first()
         if user:
             if user.is_active:
-                # key = bytes(password, 'utf-8')
                 key = getSHA256Hash(password)
-                print(key)
-                # key = b'NJoRb4atyUIeb+qCNn2CUMl2kgvl0MUROxheStO7tYg='
                 fernet = CryptoFernet(key)
-                # cipher = fernet.encrypt("My name is dipan")
-                # print(cipher)
-                # plain = fernet.decrypt(cipher)
-                # print(plain)
+
                 citizenship_no_decrypted = fernet.decrypt(user.citizenship_no )
                 if citizenship_no == citizenship_no_decrypted:
                     user_obj = authenticate(self.request, email=email, password=password )
@@ -59,9 +54,21 @@ class APILoginView(APIView):
                             'refresh': str(refresh),
                             'access': str(refresh.access_token)
                         }
-
+                        user_data = {
+                            'id': user.id
+                        }
                         self.payload['message'] = 'User logged in successfully'
                         self.payload['details']['token'] = token
+
+                        profile = Profile.objects.get(user=user)
+                        cache.set(f"{user.id}_user", password)
+                        self.payload['details']['user'] =  ProfileSerializer(profile).data
+                        election = None
+                        if profile.enrolled_election:
+                            election = profile.enrolled_election.public_key
+                        
+                        self.payload['details']['enrolled_election'] = election
+                        # self.payload['details']['userData'] =
                         return Response(self.payload, status=status.HTTP_200_OK)
                     else:
                         self.payload['message'] = "Incorrect password"
@@ -70,7 +77,7 @@ class APILoginView(APIView):
             else:
                 self.payload['message'] = "Please verify your email to login."
         else:
-            self.payload['message'] = 'Incorrect contact number'
+            self.payload['message'] = 'Incorrect email'
         return Response(self.payload, status=status.HTTP_403_FORBIDDEN)
         # return  Response(self.payload, status=status.HTTP_400_BAD_REQUEST)
 
@@ -111,15 +118,44 @@ class ProfileView(APIView):
         }
         return super(self.__class__, self).dispatch(*args, **kwargs)
     
-    def post(self, *args, **kwargs):
-        data = self.data
-        serializer = ProfileSerializer(data=data)
-        if serializer.valid():
-            
-            serializer.save()
+    def get(self, *args, **kwargs):
+        profile = Profile.objects.get(user=self.request.user)
+        serializer = ProfileAllSerializer(profile)
+        self.payload['message'] = 'Profile fetched successfully'
+        self.payload['details']['profile'] = serializer.data
+        return Response(self.payload, status=status.HTTP_200_OK)
+
+
+class ProfileUpdateView(generics.UpdateAPIView):
+    authentication_classes = (JWTAuthentication, )
+
+    def dispatch(self, *args, **kwargs):
+        self.payload = {
+            'message':{}, 'details': {}
+        }
+        return super(self.__class__, self).dispatch(*args, **kwargs)
+    
+    def update(self, *args, **kwargs):
+        data = self.request.POST
+        data._mutable = True
+        profile = Profile.objects.get(user=self.request.user)
+        if (not profile.citizenship_image_front and  self.request.FILES.get('citizenship_image_front', None) is not None) or (profile.citizenship_image_front and self.request.FILES.get('citizenship_image_front', None) is not None) :
+            data['citizenship_image_front'] = self.request.FILES.get('citizenship_image_front')
+        elif profile.citizenship_image_front and  self.request.FILES.get('citizenship_image_front', None) is None:
+            data['citizenship_image_front'] = profile.citizenship_image_front
+        if (not profile.citizenship_image_back and  self.request.FILES.get('citizenship_image_back', None) is not None) or (profile.citizenship_image_back and self.request.FILES.get('citizenship_image_back', None) is not None) :
+            data['citizenship_image_back'] = self.request.FILES.get('citizenship_image_back')
+        elif profile.citizenship_image_back and  self.request.FILES.get('citizenship_image_back', None) is None:
+            data['citizenship_image_back'] = profile.citizenship_image_back
+        data._mutable = False
+        serializer = ProfileAllSerializer(Profile.objects.get(user=self.request.user), data=data)
+        if serializer.is_valid():
+            self.perform_update(serializer)
+
             self.payload['message'] = 'Profile updated successfully'
-            self.payload['message']['details'] = serializer.data
+            self.payload['details'] = serializer.data
             return Response(self.payload, status=status.HTTP_200_OK)
+
         return Response(self.payload, status=status.HTTP_400_BAD_REQUEST)
 
 

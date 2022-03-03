@@ -16,12 +16,12 @@ class Voter:
         self.private_key = private_key
         self.account = w3.eth.account.privateKeyToAccount(self.private_key)
     
-    def castVote(self, candidateAddress):
+    def castVote(self, candidateAddress, electionAddress):
         """
         Cast vote by voter to candidate address
         """
         init_txn = self.contract.functions\
-            .castVote(candidateAddress).buildTransaction({
+            .castVote(candidateAddress, electionAddress).buildTransaction({
                 'from': self.account.address, 
                 'nonce': self.w3.eth.getTransactionCount(self.account.address),
                 'gas': 1000000,
