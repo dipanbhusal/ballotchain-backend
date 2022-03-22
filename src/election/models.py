@@ -7,12 +7,13 @@ class Election(models.Model):
     start_time = models.DateTimeField(null=True, blank=True)
     end_time = models.DateTimeField(null=True, blank=True)
     public_key = models.CharField(max_length=255, null=True, blank=True)
+    added_to_chain = models.BooleanField(default=False)
 
     status = models.CharField(choices=(
         ("started", "started"),
         ("ended", "ended"),
-        ("prepration", "prepration")
-    ),max_length=30, default="prepration")
+        ("created", "created")
+    ),max_length=30, default="created")
 
     def __str__(self):
         return self.title

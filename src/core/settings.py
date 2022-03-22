@@ -55,7 +55,7 @@ INSTALLED_APPS = [
     # 'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
-    'django_extensions',
+    # 'django_extensions',
     'accounts',
     'blockchain',
     'election',
@@ -225,3 +225,14 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # EMAIL_PORT = credentials.get('EMAIL_PORT')
 # EMAIL_HOST_USER = credentials.get('EMAIL_HOST_USER')
 # EMAIL_HOST_PASSWORD = credentials.get('EMAIL_HOST_PASSWORD')
+
+from django.contrib.messages import constants as messages
+
+
+MESSAGE_TAGS = {
+        messages.DEBUG: 'alert-secondary',
+        messages.INFO: 'alert-info',
+        messages.SUCCESS: 'alert-success',
+        messages.WARNING: 'alert-warning',
+        messages.ERROR: 'alert-danger',
+ }

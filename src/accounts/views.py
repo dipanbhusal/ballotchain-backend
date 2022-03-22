@@ -11,11 +11,13 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from accounts.accountOperations import add_to_chain
 
 from accounts.cryptography import CryptoFernet
 from accounts.middleware import get_user
 
 from accounts.serializers import ProfileAllSerializer, ProfileSerializer, UserRegisterSerializer
+from election.models import Election
 
 from .models import Profile, Users
 from .extraModules import crypOperation, getSHA256Hash, prepareKeys
@@ -95,7 +97,12 @@ class APIRegisterView(APIView):
         return super(self.__class__, self).dispatch(*args, **kwargs)
 
     def post(self,request,  *args, **kwargs):
-        serializer = UserRegisterSerializer(data=request.data)
+        data = request.data
+        data._mutable = True
+        print(data)
+        if data.get('enrolled_election') != "":
+            data['enrolled_election'] = Election.objects.get(id=data['enrolled_election']).id
+        serializer = UserRegisterSerializer(data=data)
         # serializer.is_valid(raise_exception=True)
 
         if serializer.is_valid():
@@ -148,10 +155,12 @@ class ProfileUpdateView(generics.UpdateAPIView):
         elif profile.citizenship_image_back and  self.request.FILES.get('citizenship_image_back', None) is None:
             data['citizenship_image_back'] = profile.citizenship_image_back
         data._mutable = False
+        profile = Profile.objects.get(user=self.request.user)
         serializer = ProfileAllSerializer(Profile.objects.get(user=self.request.user), data=data)
         if serializer.is_valid():
             self.perform_update(serializer)
-
+            if profile.enrolled_election:
+                add_to_chain(profile)
             self.payload['message'] = 'Profile updated successfully'
             self.payload['details'] = serializer.data
             return Response(self.payload, status=status.HTTP_200_OK)

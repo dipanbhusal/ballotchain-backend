@@ -76,6 +76,8 @@ class Users(AbstractBaseUser, PermissionsMixin):
     public_name = models.CharField(max_length=100, null=True)
     citizenship_hash = models.CharField(max_length=255, null=True)
 
+    enrolled_election = models.ForeignKey(Election, null=True, on_delete=models.SET_NULL)
+
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ('citizenship_no', 'first_name', 'last_name')
 
@@ -142,7 +144,7 @@ class Profile(models.Model):
     ward_no = models.IntegerField('ward number', null=True)
 
     enrolled_election = models.ForeignKey(Election, related_name='user_enrolled_election',on_delete=models.SET_NULL, null=True)
-    
+    added_to_chain = models.BooleanField(default=False)
 
 
 
@@ -168,7 +170,7 @@ class Candidate(models.Model):
     party = models.ForeignKey(Party, on_delete=models.CASCADE)
     bio = models.TextField('candidate\'s bio')
     plans = models.TextField('candidate\'s plan')
-    is_candidate = models.BooleanField(default=False)
+    added_to_chain = models.BooleanField(default=False)
     public_key = models.CharField(max_length=60, null=True, blank=True)
 
     vote_count = models.IntegerField(default=0, validators=[MinValueValidator(0)])

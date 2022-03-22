@@ -12,11 +12,12 @@ from . import models
 # Register your models here.
 
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ('id', 'first_name', 'last_name', 'is_voter', 'is_verified',)
+    list_display = ('id', 'first_name', 'last_name', 'is_voter', 'is_verified', 'added_to_chain')
     search_fields = ('first_name', 'last_name')
     radio_fields = {'gender': admin.HORIZONTAL}
-    readonly_fields = ['citizenship_image_front_preview', 'citizenship_image_back_preview']
-    change_form_template = "admin/accounts/profile/change_form.html"
+    exclude = ('private_key','added_to_chain', 'is_voter', )
+    readonly_fields = ['citizenship_image_front_preview', 'citizenship_image_back_preview', 'public_key', ]
+    # change_form_template = "admin/accounts/profile/change_form.html"
 
     def citizenship_image_front_preview(self, obj):
         return format_html('<img src="{}" width="auto" height="200px" />'.format(obj.citizenship_image_front.url))
@@ -47,6 +48,7 @@ class ProfileAdmin(admin.ModelAdmin):
 
                 return HttpResponseRedirect('.')
             except Exception as e:
+                print(e)
                 messages.error(request, "Error occured. Please try again")
         
         if 'add-to-chain' in request.POST:
@@ -76,9 +78,10 @@ class ProfileAdmin(admin.ModelAdmin):
     
 
 class CandidateAdmin(admin.ModelAdmin):
-    change_form_template = "admin/accounts/candidates/change_form.html"
-    list_display = ('id', 'first_name', 'last_name', 'is_candidate')
-    fields = ('first_name', 'last_name', 'public_key', 'party', 'bio', 'plans', 'is_candidate', 'enrolled_election')
+    # change_form_template = "admin/accounts/candidates/change_form.html"
+    list_display = ('id', 'first_name', 'last_name', 'added_to_chain')
+    fields = ('first_name', 'last_name', 'party', 'bio', 'plans', 'enrolled_election',)
+    readonly_fields = ('public_key', )
 
 
     def response_change(self, request, obj):

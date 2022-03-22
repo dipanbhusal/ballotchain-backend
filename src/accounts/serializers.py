@@ -15,14 +15,25 @@ class UserRegisterSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Users
-        fields = ('first_name', 'last_name', 'email', 'citizenship_no', 'password', 'password2')
+        fields = ('first_name', 'last_name', 'email', 'citizenship_no', 'password', 'password2', 'enrolled_election')
     
     def validate(self, data):
         if data['password'] != data['password2']:
             raise serializers.ValidationError({"password": "Passwords didn't match"})
         if len(data['password']) < 8:
             raise serializers.ValidationError({"password": "Passwords must be minimum of 8 characters"})
+        # data._mutable = True
+        # if data.get('enrolled_election', None) is not None:
+        #     data['enrolled_election'] = Election.objects.get(id=data['enrolled_election']).id
         return data
+
+    # def to_internal_value(self, data):
+    #     data._mutable = True
+    #     print(data)
+    #     print("dataa::", data.get('enrolled_election'))
+    #     if data.get('enrolled_election', None) is not None:
+    #         data['enrolled_election'] = Election.objects.get(id=data['enrolled_election']).id
+    #     return super(UserRegisterSerializer, self).to_internal_value(data)
     
     def create(self, validated_data):
         
@@ -124,15 +135,16 @@ class ProfileAllSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 
-#     def to_representation(self, instance):
-#         self.
-#         return super().to_representation(instance)
+    def to_representation(self, instance):
+        self.fields['enrolled_election'] = EnrolledElectionSerializer()
+        return super().to_representation(instance)
 
 
-# class EnrolledElection(serializers.ModelSerializer):
-#     class Meta:
-#         model = Election
-#         fields = ('title',)
+
+class EnrolledElectionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Election
+        fields = ('id', 'title',)
     # def save(self, **kwargs):
     #     profile = Profile.objects.filter(id=self.fields['id'])
     #     profile.update(**kwargs)

@@ -11,12 +11,12 @@ from . import models
 
 class ElectionsAdmin(admin.ModelAdmin):
     change_form_template = "admin/election/election/change_form.html"
-    list_display = ('id','title', 'status', 'start_time', 'end_time')
+    list_display = ('id','title', 'status', 'start_time', 'end_time', 'added_to_chain')
+    fields = ('title', 'description', 'start_time', 'end_time', 'status', 'public_key')
+    readonly_fields = ['public_key',]
 
     def response_change(self, request, obj):
-        # if "generate-id" in request.POST:
 
-        
         #Start election
         if 'start-election' in request.POST:
             admin = ElectionAdmin()
@@ -64,7 +64,6 @@ class ElectionsAdmin(admin.ModelAdmin):
             url = f'https://rinkeby.etherscan.io/tx/{txn_hash}'
             if recipt['status']:
                 
-                obj.is_candidate = True
                 obj.save()
                 self.message_user(
                     request, mark_safe(

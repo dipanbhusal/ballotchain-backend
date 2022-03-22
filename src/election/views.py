@@ -1,5 +1,8 @@
+from django.contrib import messages
 from uuid import UUID
 from django.contrib.auth.hashers import check_password
+from django.shortcuts import render
+from django.views import View
 from rest_framework import generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -123,7 +126,7 @@ class CastVoteView(APIView):
                     voter_obj = Voter(private_key_plain)
                     from blockchain.authenticate import w3
                     acnt = w3.eth.account.privateKeyToAccount(private_key_plain)
-                    if not prof.enrolled_election.public_key == serializer.data['election_address']:
+                    if not prof.first().enrolled_election.public_key == serializer.data['election_address']:
                         self.message['message'] = f"You are not enrolled for this election."
                         return Response(self.message, status=status.HTTP_400_BAD_REQUEST)
                     try:
@@ -249,7 +252,7 @@ class ElectionList(APIView):
             on_voting_phase = []
             on_ended_phase = []
             for each in serializer.data:
-                if each['status'] == "prepration":
+                if each['status'] == "created":
                     on_preparation_phase.append(each)
                 elif each['status'] == "started":
                     on_voting_phase.append(each)
@@ -304,3 +307,45 @@ class ElectionList(APIView):
         #     'transactionIndex': 35, 
         #     'type': '0x0'
         # }
+
+
+class EnrollCandidateView(View):
+    # permission_classes = []
+    template_name = "admin/election/election/candidate_enroll.html"
+
+    def dispatch(self, *args, **kwargs):
+        self.message = {
+            'message': None, 'details': {}
+        }
+        return super().dispatch( *args, **kwargs)
+
+    def get_data(self, **kwargs):
+
+        candidates = Candidate.objects.all()
+        elections = Election.objects.filter(status="created")
+        context = {
+            'candidates': candidates,
+            'elections': elections,
+        }
+        return context
+    
+
+    def get(self, request):
+        
+        return render(request, self.template_name, context=self.get_data() )
+    
+    def post(self, request):
+        candidate_id = request.POST.get('candidate_id')
+        election_id = request.POST.get('election_id', None)
+        if election_id:
+            candidate_obj = Candidate.objects.filter(id=candidate_id)
+            election_obj = Election.objects.get(id=election_id)
+            candidate_obj.update(enrolled_election=election_obj)
+            candidate_obj = candidate_obj.first()
+            messages.success(request, f'Candidate {candidate_obj.first_name} {candidate_obj.last_name} enrolled to {candidate_obj.enrolled_election.title} successfully.')
+
+        else:
+            messages.error(request, 'Please select election')
+        
+        return render(request, self.template_name, context=self.get_data())
+        
