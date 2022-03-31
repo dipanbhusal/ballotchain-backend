@@ -126,43 +126,48 @@ class CastVoteView(APIView):
                     voter_obj = Voter(private_key_plain)
                     from blockchain.authenticate import w3
                     acnt = w3.eth.account.privateKeyToAccount(private_key_plain)
-                    if not prof.first().enrolled_election.public_key == serializer.data['election_address']:
-                        self.message['message'] = f"You are not enrolled for this election."
-                        return Response(self.message, status=status.HTTP_400_BAD_REQUEST)
+                    
+                    # if not prof.first().enrolled_election.public_key == serializer.data['election_address']:
+                    #     self.message['message'] = f"You are not enrolled for this election."
+                    #     return Response(self.message, status=status.HTTP_400_BAD_REQUEST)
                     try:
                         recipt = voter_obj.castVote(candidate_obj.public_key, serializer.data['election_address'])
+                        txn_status = recipt['status']
+                    
+                        txn_hash = recipt['transactionHash'].hex()
+
+                        if not txn_status:
+                            voter_acc = voter(prof.first().public_key)
+                            print(voter_acc)
+                            if voter_acc[1]:
+                                self.message['message'] = "User has already voted."
+                            else:
+                                self.message['message'] = "Voting not successful"
+                                self.message['details'] = {
+                                    'status' : False,
+                                    'link': f'https://rinkeby.etherscan.io/tx/{txn_hash}'
+                                }
+                            return Response(self.message, status=status.HTTP_400_BAD_REQUEST)
+                        candidate_obj.vote_count += 1
+                        candidate_obj.party.vote_count += 1
+                        candidate_obj.party.save()
+                        candidate_obj.save()
+                        user = get_user()
+                        
+                        user.profile.has_voted=True
+                        user.profile.save()
+                    
+                        #todo ->> send mail after voting successful
+                        self.message['message'] = "Voted successfully"
+                        self.message['details'] = {
+                            'status' : True,
+                            'link' : f'https://rinkeby.etherscan.io/tx/{txn_hash}'
+                        }
+                        return Response(self.message, status=status.HTTP_200_OK)
                     except ValueError as e:
+                        print(e)
                         self.message['message'] = "No sufficient funds"
                         return Response(self.message, status=status.HTTP_400_BAD_REQUEST)
-                    txn_status = recipt['status']
-
-                    txn_hash = recipt['transactionHash'].hex()
-                    if not txn_status:
-                        voter_acc = voter(prof.first().public_key)
-                        if voter_acc[2]:
-                            self.message['message'] = "User has already voted."
-                        else:
-                            self.message['message'] = "Voting not successful"
-                            self.message['details'] = {
-                                'status' : False,
-                                'link': f'https://rinkeby.etherscan.io/tx/{txn_hash}'
-                            }
-                        return Response(self.message, status=status.HTTP_400_BAD_REQUEST)
-                    candidate_obj.vote_count += 1
-                    candidate_obj.party.vote_count += 1
-                    candidate_obj.party.save()
-                    candidate_obj.save()
-                    user = get_user()
-                    
-                    user.profile.has_voted=True
-                    user.profile.save()
-                    #todo ->> send mail after voting successful
-                    self.message['message'] = "Voted successfully"
-                    self.message['details'] = {
-                        'status' : True,
-                        'link' : f'https://rinkeby.etherscan.io/tx/{txn_hash}'
-                    }
-                    return Response(self.message, status=status.HTTP_200_OK)
 
                 else:
                     self.message['message'] = "Password is not valid"
