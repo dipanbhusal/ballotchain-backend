@@ -26,6 +26,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/accounts/', include('accounts.urls')),
     path('api/election/', include('election.urls')),
+    path('blockchain/', include('blockchain.urls'))
     # path('api/token/', jwt_views.TokenObtainPairView.as_view(), name='token_obtain_pair'),
 ] 
 urlpatterns +=  static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
