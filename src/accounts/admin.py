@@ -64,6 +64,7 @@ class ProfileAdmin(admin.ModelAdmin):
                     )
                 )
                 obj.is_voter = True
+                obj.added_to_chain = True
                 obj.save()
                 return HttpResponseRedirect('.')
             else:
