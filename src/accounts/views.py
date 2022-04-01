@@ -159,8 +159,8 @@ class ProfileUpdateView(generics.UpdateAPIView):
         serializer = ProfileAllSerializer(Profile.objects.get(user=self.request.user), data=data)
         if serializer.is_valid():
             self.perform_update(serializer)
-            if profile.enrolled_election:
-                add_to_chain(profile)
+            # if profile.enrolled_election:
+            #     add_to_chain(profile)
             self.payload['message'] = 'Profile updated successfully'
             self.payload['details'] = serializer.data
             return Response(self.payload, status=status.HTTP_200_OK)

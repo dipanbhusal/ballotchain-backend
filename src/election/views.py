@@ -190,6 +190,7 @@ class ElectionResultView(APIView):
         return super().dispatch( *args, **kwargs)
     
     def get(self, request, *args, **kwargs):
+        
         candidates_list = Candidate.objects.all()
         candidate_serializer = CandidateSerializer(candidates_list, many=True)
         election_address = request.GET.get('election_address')
@@ -207,7 +208,7 @@ class ElectionResultView(APIView):
         }
 
         election_result = electionResult(election_address)
-
+        print(election_result)
         final_data = []
         result = {}
         for data in election_result:
@@ -239,6 +240,12 @@ class ElectionResultView(APIView):
         # elif election_state == 0:
         #     self.message['message'] = "Election is not started"
         #     return Response(self.message)
+
+
+# [('0xdB1b5EeAb8B27c3754A2c06F294fcb315A7aC987', '0xdE73111b93b425743769a9923c1667390088ed74', '0x93c41706Fd47f00543938E8862C55277Ec7D2788'), 
+# ('0x51616496080822a107769F2cAf3209a3635D16eC', '0xdE73111b93b425743769a9923c1667390088ed74', '0x93c41706Fd47f00543938E8862C55277Ec7D2788'),
+#  ('0x5622Aebca9A3bf91fAcE1c2ED0bf41df08d98351', '0xdE73111b93b425743769a9923c1667390088ed74', '0x93c41706Fd47f00543938E8862C55277Ec7D2788')]
+
 
 
 class ElectionList(APIView):
