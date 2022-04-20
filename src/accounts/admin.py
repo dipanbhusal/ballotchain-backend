@@ -82,7 +82,7 @@ class ProfileAdmin(admin.ModelAdmin):
 class CandidateAdmin(admin.ModelAdmin):
     # change_form_template = "admin/accounts/candidates/change_form.html"
     list_display = ('id', 'first_name', 'last_name', 'added_to_chain')
-    fields = ('first_name', 'last_name', 'party', 'bio', 'plans', 'enrolled_election',)
+    fields = ('first_name', 'last_name', 'party', 'bio', 'plans', 'enrolled_election', 'public_key')
     readonly_fields = ('public_key', )
 
 
