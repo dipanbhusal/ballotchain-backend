@@ -192,3 +192,5 @@ class CryptoFernet:
             return plain
         except :
             return None
+
+

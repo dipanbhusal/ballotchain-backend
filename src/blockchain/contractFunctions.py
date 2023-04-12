@@ -13,18 +13,18 @@ def state():
     return contract.functions.electionState().call()
 
 
-def totalVotes():
+def totalVotes(electionAddress):
     """
     Calls countVoteCasted function from smart contract    
     """
-    return contract.functions.countVoteCasted().call()
+    return contract.functions.elections(electionAddress).call()[3]
 
 
-def totalVoters():
+def totalVoters(electionAddress):
     """
     Calls totalVoters function from smart contract    
     """
-    return contract.functions.totalVoters().call()
+    return contract.functions.elections(electionAddress).call()[1]
 
 
 def totalCandidates():
@@ -49,9 +49,15 @@ def candidate(address):
 
 
 
-def electionResult():
+def electionResult(electionAddress):
     """
     Calls electionResult function from smart contract    
     """
-    return contract.functions.electionResult().call()
+    return contract.functions.electionResult(electionAddress).call()
 
+
+def election(electionAddress):
+    """
+    Calls election function from smart contract    
+    """
+    return contract.functions.elections(electionAddress).call()

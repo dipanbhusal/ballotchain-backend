@@ -30,7 +30,17 @@ SECRET_KEY = 'django-insecure-$9*upcuzvc^$v@1u*4*qoq6s!ftw@7m-n)1i!*21$^s3zq310j
 DEBUG = credentials['DEBUG']
 
 ALLOWED_HOSTS = credentials['ALLOWED_HOSTS']
-
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:3000',
+    'https://localhost:3000',
+    'http://127.0.0.1:3000',
+    'https://127.0.0.1:3000',
+    'http://localhost:5000',
+    'https://localhost:5000',
+    'http://127.0.0.1:5000',
+    'https://127.0.0.1:5000'
+]
 
 # Application definition
 
@@ -44,7 +54,8 @@ INSTALLED_APPS = [
     'rest_framework',
     # 'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
-
+    'corsheaders',
+    # 'django_extensions',
     'accounts',
     'blockchain',
     'election',
@@ -52,6 +63,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'accounts.middleware.RequestMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -142,7 +154,7 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
-STATICFILES_DIRS = (os.path.join(os.path.dirname(BASE_DIR), "static"), )
+STATICFILES_DIRS = (os.path.join(os.path.dirname(BASE_DIR), "../static"), )
 STATIC_ROOT = os.path.join(os.path.dirname(BASE_DIR), 'assets')
 
 
@@ -182,16 +194,22 @@ SIMPLE_JWT = {
 
 
 
-CACHE_TIMEOUT = 864000 # 86400 FOR 1 DAY OF CACHES STORED TIMEOUT
+# CACHE_TIMEOUT = 864000 # 86400 FOR 1 DAY OF CACHES STORED TIMEOUT
 CACHES = {
         'default': {
-            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
-            'LOCATION': 'redis://127.0.0.1:6379',
+            'BACKEND': 'django_redis.cache.RedisCache',
+            'LOCATION': 'redis://redis:6379',
 
-            'TIMEOUT': CACHE_TIMEOUT 
+            # 'TIMEOUT': CACHE_TIMEOUT 
         }
     }
 
+# CACHES = {
+#     'default': {
+#         'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache',
+#         'LOCATION': '127.0.0.1:11211',
+#     }
+# }
 
 CELERY_TIMEZONE = TIME_ZONE
 CELERY_RESULT_BACKEND = 'redis://localhost:6379/'
@@ -207,3 +225,14 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # EMAIL_PORT = credentials.get('EMAIL_PORT')
 # EMAIL_HOST_USER = credentials.get('EMAIL_HOST_USER')
 # EMAIL_HOST_PASSWORD = credentials.get('EMAIL_HOST_PASSWORD')
+
+from django.contrib.messages import constants as messages
+
+
+MESSAGE_TAGS = {
+        messages.DEBUG: 'alert-secondary',
+        messages.INFO: 'alert-info',
+        messages.SUCCESS: 'alert-success',
+        messages.WARNING: 'alert-warning',
+        messages.ERROR: 'alert-danger',
+ }

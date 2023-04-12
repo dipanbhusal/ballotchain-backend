@@ -15,13 +15,13 @@ class ElectionAdmin:
         self.private_key = private_key
         self.account = w3.eth.account.privateKeyToAccount(self.private_key)
 
-    def add_voter(self, address):
+    def add_voter(self, address, electionAddress):
         """
         Adds voter with given address to blockchain(eth) network.
         Returns recipt of transaction
         """
         init_txn = self.contract.functions\
-            .addVoter(address).buildTransaction({
+            .addVoter(address, electionAddress).buildTransaction({
                 'from': self.account.address,
                 'nonce': self.w3.eth.getTransactionCount(self.account.address),
                 'gas': 1000000,
@@ -34,13 +34,13 @@ class ElectionAdmin:
 
         return dict(receipt)
     
-    def remove_voter(self, address):
+    def remove_voter(self, address, electionAddress):
         """
         Removees voter if it exists.
         input: voter's address
         """
         init_txn = self.contract.functions\
-            .removeVoter(address).buildTransaction({
+            .removeVoter(address, electionAddress).buildTransaction({
                 'from': self.account.address,
                 'nonce': self.w3.eth.getTransactionCount(self.account.address),
                 'gas': 100000,
@@ -53,13 +53,13 @@ class ElectionAdmin:
         return dict(recipt)
 
 
-    def add_candidate(self, address):
+    def add_candidate(self, address, electionAddress):
         """
         Adds voter with given address to blockchain(eth) network.
         Returns recipt of transaction
         """
         init_txn = self.contract.functions\
-            .addCandidate(address).buildTransaction({
+            .addCandidate(address, electionAddress).buildTransaction({
                 'from': self.account.address,
                 'nonce': self.w3.eth.getTransactionCount(self.account.address),
                 'gas': 1000000,
@@ -72,12 +72,33 @@ class ElectionAdmin:
 
         return dict(receipt)
 
-    def start_election(self):
+
+    def add_election(self, electionAddress):
+        """
+        Adds voter with given address to blockchain(eth) network.
+        Returns recipt of transaction
+        """
+        init_txn = self.contract.functions\
+            .addElection(electionAddress).buildTransaction({
+                'from': self.account.address,
+                'nonce': self.w3.eth.getTransactionCount(self.account.address),
+                'gas': 1000000,
+                'gasPrice': self.w3.eth.gasPrice
+            })
+
+        signed = self.account.signTransaction(init_txn)
+        txn_hash = self.w3.eth.sendRawTransaction(signed.rawTransaction)
+        receipt = self.w3.eth.waitForTransactionReceipt(txn_hash)
+
+        return dict(receipt)
+    
+
+    def start_election(self, electionAddress):
         """
         Module for starting election
         """
         init_txn = self.contract.functions\
-            .startElection().buildTransaction({
+            .startElection(electionAddress).buildTransaction({
                 'from': self.account.address,
                 'nonce': self.w3.eth.getTransactionCount(self.account.address),
                 'gas': 100000,
@@ -90,12 +111,12 @@ class ElectionAdmin:
 
         return dict(recipt)
 
-    def end_election(self):
+    def end_election(self, electionAddress):
         """
         Module for ending election after it is started
         """
         init_txn = self.contract.functions\
-            .endElection().buildTransaction({
+            .endElection(electionAddress).buildTransaction({
                 'from': self.account.address,
                 'nonce': self.w3.eth.getTransactionCount(self.account.address),
                 'gas': 100000,

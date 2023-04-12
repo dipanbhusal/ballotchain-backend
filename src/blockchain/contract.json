@@ -1,6 +1,73 @@
 {
     "abi": [
         {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "_candidateAddress",
+                    "type": "address"
+                },
+                {
+                    "internalType": "address",
+                    "name": "_electionAddress",
+                    "type": "address"
+                }
+            ],
+            "name": "addCandidate",
+            "outputs": [
+                {
+                    "internalType": "address",
+                    "name": "",
+                    "type": "address"
+                }
+            ],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "_electionAddress",
+                    "type": "address"
+                }
+            ],
+            "name": "addElection",
+            "outputs": [
+                {
+                    "internalType": "address",
+                    "name": "",
+                    "type": "address"
+                }
+            ],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "_voterAddress",
+                    "type": "address"
+                },
+                {
+                    "internalType": "address",
+                    "name": "_electionAddress",
+                    "type": "address"
+                }
+            ],
+            "name": "addVoter",
+            "outputs": [
+                {
+                    "internalType": "address",
+                    "name": "",
+                    "type": "address"
+                }
+            ],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
             "inputs": [],
             "stateMutability": "nonpayable",
             "type": "constructor"
@@ -32,131 +99,15 @@
             "type": "event"
         },
         {
-            "anonymous": false,
-            "inputs": [],
-            "name": "electionEnded",
-            "type": "event"
-        },
-        {
-            "anonymous": false,
-            "inputs": [],
-            "name": "electionStarted",
-            "type": "event"
-        },
-        {
-            "anonymous": false,
-            "inputs": [
-                {
-                    "indexed": false,
-                    "internalType": "address",
-                    "name": "_voter",
-                    "type": "address"
-                }
-            ],
-            "name": "voterAdded",
-            "type": "event"
-        },
-        {
             "inputs": [
                 {
                     "internalType": "address",
                     "name": "_candidateAddress",
                     "type": "address"
-                }
-            ],
-            "name": "addCandidate",
-            "outputs": [
-                {
-                    "internalType": "address",
-                    "name": "",
-                    "type": "address"
-                }
-            ],
-            "stateMutability": "nonpayable",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "_voterAddress",
-                    "type": "address"
-                }
-            ],
-            "name": "addVoter",
-            "outputs": [
-                {
-                    "internalType": "address",
-                    "name": "",
-                    "type": "address"
-                }
-            ],
-            "stateMutability": "nonpayable",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "",
-                    "type": "address"
-                }
-            ],
-            "name": "candidates",
-            "outputs": [
-                {
-                    "internalType": "address",
-                    "name": "candidateAddress",
-                    "type": "address"
                 },
                 {
-                    "internalType": "uint256",
-                    "name": "totalVotes",
-                    "type": "uint256"
-                },
-                {
-                    "internalType": "bool",
-                    "name": "isCandidate",
-                    "type": "bool"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "uint256",
-                    "name": "",
-                    "type": "uint256"
-                }
-            ],
-            "name": "candidatesArray",
-            "outputs": [
-                {
                     "internalType": "address",
-                    "name": "candidateAddress",
-                    "type": "address"
-                },
-                {
-                    "internalType": "uint256",
-                    "name": "totalVotes",
-                    "type": "uint256"
-                },
-                {
-                    "internalType": "bool",
-                    "name": "isCandidate",
-                    "type": "bool"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "_candidateAddress",
+                    "name": "_electionAddress",
                     "type": "address"
                 }
             ],
@@ -166,53 +117,37 @@
             "type": "function"
         },
         {
+            "anonymous": false,
             "inputs": [],
-            "name": "countVoteCasted",
-            "outputs": [
-                {
-                    "internalType": "uint256",
-                    "name": "",
-                    "type": "uint256"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
+            "name": "electionEnded",
+            "type": "event"
         },
         {
-            "inputs": [],
-            "name": "electionAdmin",
-            "outputs": [
+            "inputs": [
                 {
                     "internalType": "address",
-                    "name": "",
+                    "name": "_electionAddress",
                     "type": "address"
                 }
             ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [],
             "name": "electionResult",
             "outputs": [
                 {
                     "components": [
                         {
-                            "components": [
-                                {
-                                    "internalType": "address",
-                                    "name": "voterAddress",
-                                    "type": "address"
-                                },
-                                {
-                                    "internalType": "address",
-                                    "name": "candidateAddress",
-                                    "type": "address"
-                                }
-                            ],
-                            "internalType": "struct BallotChain.VotingData",
-                            "name": "data",
-                            "type": "tuple"
+                            "internalType": "address",
+                            "name": "voterAddress",
+                            "type": "address"
+                        },
+                        {
+                            "internalType": "address",
+                            "name": "candidateAddress",
+                            "type": "address"
+                        },
+                        {
+                            "internalType": "address",
+                            "name": "electionAddress",
+                            "type": "address"
                         }
                     ],
                     "internalType": "struct BallotChain.Result[]",
@@ -220,24 +155,23 @@
                     "type": "tuple[]"
                 }
             ],
-            "stateMutability": "view",
+            "stateMutability": "nonpayable",
             "type": "function"
         },
         {
+            "anonymous": false,
             "inputs": [],
-            "name": "electionState",
-            "outputs": [
+            "name": "electionStarted",
+            "type": "event"
+        },
+        {
+            "inputs": [
                 {
-                    "internalType": "enum BallotChain.ElectionState",
-                    "name": "",
-                    "type": "uint8"
+                    "internalType": "address",
+                    "name": "_electionAddress",
+                    "type": "address"
                 }
             ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [],
             "name": "endElection",
             "outputs": [
                 {
@@ -269,10 +203,224 @@
             "type": "function"
         },
         {
-            "inputs": [],
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "_electionAddress",
+                    "type": "address"
+                }
+            ],
             "name": "startElection",
             "outputs": [],
             "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "anonymous": false,
+            "inputs": [
+                {
+                    "indexed": false,
+                    "internalType": "address",
+                    "name": "_voter",
+                    "type": "address"
+                }
+            ],
+            "name": "voterAdded",
+            "type": "event"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "",
+                    "type": "address"
+                }
+            ],
+            "name": "candidates",
+            "outputs": [
+                {
+                    "internalType": "address",
+                    "name": "candidateAddress",
+                    "type": "address"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "totalVotes",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "bool",
+                    "name": "isCandidate",
+                    "type": "bool"
+                },
+                {
+                    "internalType": "address",
+                    "name": "electionAddress",
+                    "type": "address"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "name": "candidatesArray",
+            "outputs": [
+                {
+                    "internalType": "address",
+                    "name": "candidateAddress",
+                    "type": "address"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "totalVotes",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "bool",
+                    "name": "isCandidate",
+                    "type": "bool"
+                },
+                {
+                    "internalType": "address",
+                    "name": "electionAddress",
+                    "type": "address"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [],
+            "name": "countVoteCasted",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [],
+            "name": "electionAdmin",
+            "outputs": [
+                {
+                    "internalType": "address",
+                    "name": "",
+                    "type": "address"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "name": "electionArray",
+            "outputs": [
+                {
+                    "internalType": "address",
+                    "name": "electionAddress",
+                    "type": "address"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "votersCount",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "candidatesCount",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "totalCastedVotes",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "enum BallotChain.ElectionState",
+                    "name": "state",
+                    "type": "uint8"
+                },
+                {
+                    "internalType": "bool",
+                    "name": "isActive",
+                    "type": "bool"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "",
+                    "type": "address"
+                }
+            ],
+            "name": "elections",
+            "outputs": [
+                {
+                    "internalType": "address",
+                    "name": "electionAddress",
+                    "type": "address"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "votersCount",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "candidatesCount",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "totalCastedVotes",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "enum BallotChain.ElectionState",
+                    "name": "state",
+                    "type": "uint8"
+                },
+                {
+                    "internalType": "bool",
+                    "name": "isActive",
+                    "type": "bool"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [],
+            "name": "electionState",
+            "outputs": [
+                {
+                    "internalType": "enum BallotChain.ElectionState",
+                    "name": "",
+                    "type": "uint8"
+                }
+            ],
+            "stateMutability": "view",
             "type": "function"
         },
         {
@@ -325,6 +473,11 @@
                     "internalType": "bool",
                     "name": "isVoter",
                     "type": "bool"
+                },
+                {
+                    "internalType": "address",
+                    "name": "electionAddress",
+                    "type": "address"
                 }
             ],
             "stateMutability": "view",
@@ -354,6 +507,11 @@
                     "internalType": "bool",
                     "name": "isVoter",
                     "type": "bool"
+                },
+                {
+                    "internalType": "address",
+                    "name": "electionAddress",
+                    "type": "address"
                 }
             ],
             "stateMutability": "view",

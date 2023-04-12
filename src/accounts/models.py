@@ -6,6 +6,8 @@ from django.core.validators import MinLengthValidator, MinValueValidator
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 
+from election.models import Election
+
 # Create your models here.
 
 
@@ -69,10 +71,12 @@ class Users(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
 
     is_verified = models.BooleanField(default=False)
-    user_type = models.CharField(max_length=10, choices=USER_TYPES)
+    # user_type = models.CharField(max_length=10, choices=USER_TYPES)
 
     public_name = models.CharField(max_length=100, null=True)
     citizenship_hash = models.CharField(max_length=255, null=True)
+
+    enrolled_election = models.ForeignKey(Election, null=True, on_delete=models.SET_NULL)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ('citizenship_no', 'first_name', 'last_name')
@@ -80,7 +84,7 @@ class Users(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
 
     def __str__(self,):
-        return self.first_name + ' ' + self.last_name
+        return self.email 
 
     class Meta:
         verbose_name_plural = 'Users'
@@ -90,31 +94,23 @@ class Users(AbstractBaseUser, PermissionsMixin):
             self.public_name=self.first_name + ' ' +  self.last_name
         super(self.__class__, self).save(*args, **kwargs)
 
-class Province(models.Model):
-    name = models.CharField(max_length=50)
 
-    class Meta:
-        verbose_name_plural = "Provinces"
+# class Province(models.Model):
+#     name = models.CharField(max_length=50)
+
+#     class Meta:
+#         verbose_name_plural = "Provinces"
+
+#     def __str__(self):
+#         return self.name
 
 
-class Districts(models.Model):
+# class Districts(models.Model):
+#     province = models.ForeignKey(Province, on_delete=models.CASCADE)
+#     name = models.CharField(max_length=50)
 
-    province = models.ForeignKey(Province, on_delete=models.CASCADE)
-    name = models.CharField(max_length=50)
-
-class RSAKeys(models.Model):
-    user = models.ForeignKey(Users, on_delete=models.CASCADE)
-    num_exp_d = models.CharField(max_length=255)
-
-    class Meta:
-        verbose_name_plural = 'RSA Keys'
-
-    def __str__(self):
-        return self.user.first_name + ' ' + self.user.last_name
-
-    def save(self, *args, **kwargs):
-        self.num_exp_d = self.num_exp_d.decode('utf-8')
-        super(self.__class__, self).save(*args, **kwargs)
+#     def __str__(self):
+#         return self.name
 
 
 class Profile(models.Model):
@@ -127,37 +123,30 @@ class Profile(models.Model):
 
     public_key = models.CharField(max_length=60, null=True, blank=True)
     private_key = models.CharField(max_length=255, null=True, blank=True)
-    permanent_address = models.ForeignKey('PermanentAddress' ,on_delete=models.CASCADE, null=True)
-    temporary_address = models.ForeignKey('TemporaryAddress', on_delete=models.CASCADE, null=True)
+    
     date_of_birth = models.DateField( null=True)
-    citizenship_image= models.ImageField(upload_to=citizenship_image, null=True)
-    citizenship_issued_district = models.ForeignKey(Districts, on_delete=models.SET_NULL, null=True)
+    citizenship_image_front= models.ImageField(upload_to=citizenship_image, null=True)
+    citizenship_image_back= models.ImageField(upload_to=citizenship_image, null=True)
+
+    # citizenship_issued_district = models.ForeignKey(Districts, on_delete=models.SET_NULL, null=True)
 
     date_submitted = models.DateTimeField(default=timezone.now)
     date_edited = models.DateTimeField(auto_now=True)
     is_voter = models.BooleanField(default=False)
-    is_candidate = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
     has_voted = models.BooleanField(default=False)
 
-class TemporaryAddress(models.Model):
-    district = models.ForeignKey(Districts, on_delete=models.SET_NULL, null=True)
-    provience = models.ForeignKey(Province, on_delete=models.SET_NULL, null=True)
-    municipality = models.CharField(max_length=50)
-    ward_no = models.IntegerField('ward number')
-    
-    def __str__(self):
-        return self.district.name+'-'+str(self.ward_no)+' ,'+self.municipality
+    district = models.CharField(max_length=255, null=True)
+    provience = models.CharField(max_length=255, null=True)
+    # district = models.ForeignKey(Districts, related_name="user_district", on_delete=models.SET_NULL, null=True)
+    # provience = models.ForeignKey(Province, related_name="user_provience", on_delete=models.SET_NULL, null=True)
+    municipality = models.CharField(max_length=50, null=True)
+    ward_no = models.IntegerField('ward number', null=True)
+
+    enrolled_election = models.ForeignKey(Election, related_name='user_enrolled_election',on_delete=models.SET_NULL, null=True)
+    added_to_chain = models.BooleanField(default=False)
 
 
-class PermanentAddress(models.Model):
-    district = models.ForeignKey(Districts, on_delete=models.SET_NULL, null=True)
-    provience = models.ForeignKey(Province, on_delete=models.SET_NULL, null=True)
-    municipality = models.CharField(max_length=50)
-    ward_no = models.IntegerField('ward number')
-
-    def __str__(self):
-        return self.district.name+'-'+str(self.ward_no)+' ,'+self.municipality
 
 class Party(models.Model):
     id = models.UUIDField(default=uuid.uuid4, primary_key=True)
@@ -181,28 +170,13 @@ class Candidate(models.Model):
     party = models.ForeignKey(Party, on_delete=models.CASCADE)
     bio = models.TextField('candidate\'s bio')
     plans = models.TextField('candidate\'s plan')
-    is_candidate = models.BooleanField(default=False)
+    added_to_chain = models.BooleanField(default=False)
     public_key = models.CharField(max_length=60, null=True, blank=True)
 
     vote_count = models.IntegerField(default=0, validators=[MinValueValidator(0)])
 
+    enrolled_election = models.ForeignKey(Election, related_name='candidate_enrolled_election',on_delete=models.SET_NULL, null=True)
+
     def __str__(self):
         return self.first_name + ' ' + self.last_name
 
-
-class ElectionState(models.Model):
-    start_time = models.DateTimeField(auto_now_add=True)
-    end_time = models.DateTimeField(null=True)
-    state = models.CharField(max_length=25)
-
-    def __str__(self):
-        return self.state
-
-
-class ElectionResult(models.Model):
-    voter = models.ForeignKey(Profile, on_delete=models.CASCADE)
-    candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE)
-    voting_time = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f"{self.voter.public_key} to {self.candidate.public_key}"
